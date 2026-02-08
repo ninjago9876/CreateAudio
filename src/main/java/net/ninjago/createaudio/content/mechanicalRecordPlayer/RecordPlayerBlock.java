@@ -16,8 +16,7 @@ public class RecordPlayerBlock extends HorizontalKineticBlock
 
     @Override
     public Direction.Axis getRotationAxis(BlockState state) {
-        return state.getValue(HORIZONTAL_FACING)
-                .getAxis();
+        return Direction.Axis.Y;
     }
 
     @Override

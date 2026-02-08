@@ -3,6 +3,7 @@ package net.ninjago.createaudio;
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -15,6 +16,9 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.ninjago.createaudio.audio.AudioEngine;
+import net.ninjago.createaudio.audio.AudioEngineRegistry;
 import net.ninjago.createaudio.registry.ModBlockEntityTypes;
 import net.ninjago.createaudio.registry.ModBlocks;
 import net.ninjago.createaudio.registry.ModItems;
@@ -55,7 +59,17 @@ public class CreateAudio
     }
 
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) { }
+    public void onServerStarting(ServerStartingEvent event) {
+        MinecraftServer server = event.getServer();
+        AudioEngine engine = new AudioEngine();
+        engine.start();
+        AudioEngineRegistry.attach(server, engine);
+    }
+
+    @SubscribeEvent
+    public void onServerStopping(ServerStoppingEvent event) {
+        AudioEngineRegistry.remove(event.getServer()).shutdown();
+    }
 
     @EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
     public static class ClientModEvents
