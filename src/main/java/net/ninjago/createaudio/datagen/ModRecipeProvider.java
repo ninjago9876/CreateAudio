@@ -7,7 +7,7 @@ import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.world.item.Items;
-import net.ninjago.createaudio.block.ModBlocks;
+import net.ninjago.createaudio.registry.ModBlocks;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -19,7 +19,7 @@ public class ModRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes(@NonNull RecipeOutput recipeOutput) {
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.TEST_BLOCK.get())
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.TEST.get())
                 .pattern("III")
                 .pattern(" I ")
                 .pattern(" I ")

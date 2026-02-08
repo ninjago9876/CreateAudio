@@ -3,11 +3,10 @@ package net.ninjago.createaudio.datagen;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.ninjago.createaudio.CreateAudio;
-import net.ninjago.createaudio.block.ModBlocks;
+import net.ninjago.createaudio.registry.ModBlocks;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
@@ -20,9 +19,9 @@ public class ModBlockTagProvider extends BlockTagsProvider {
     @Override
     protected void addTags(HolderLookup.Provider provider) {
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .add(ModBlocks.TEST_BLOCK.get());
+                .add(ModBlocks.TEST.get());
 
         tag(BlockTags.NEEDS_STONE_TOOL)
-                .add(ModBlocks.TEST_BLOCK.get());
+                .add(ModBlocks.TEST.get());
     }
 }

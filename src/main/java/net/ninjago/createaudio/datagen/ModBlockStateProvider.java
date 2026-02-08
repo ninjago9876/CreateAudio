@@ -6,7 +6,7 @@ import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.ninjago.createaudio.CreateAudio;
-import net.ninjago.createaudio.block.ModBlocks;
+import net.ninjago.createaudio.registry.ModBlocks;
 
 public class ModBlockStateProvider extends BlockStateProvider {
     public ModBlockStateProvider(PackOutput output, ExistingFileHelper exFileHelper) {
@@ -15,7 +15,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        blockWithItem(ModBlocks.TEST_BLOCK);
+        blockWithItem(ModBlocks.TEST);
+        blockWithItem(ModBlocks.MECHANICAL_RECORD_PLAYER);
     }
 
     private void blockWithItem(DeferredHolder<Block, ?> deferredBlock) {

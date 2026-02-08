@@ -1,13 +1,17 @@
 package net.ninjago.createaudio.datagen;
 
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.Block;
-import net.ninjago.createaudio.block.ModBlocks;
+import net.ninjago.createaudio.CreateAudio;
+import net.ninjago.createaudio.registry.ModBlocks;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ModBlockLootTableProvider extends BlockLootSubProvider {
     protected ModBlockLootTableProvider(HolderLookup.Provider registries) {
@@ -16,11 +20,12 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
-        dropSelf(ModBlocks.TEST_BLOCK.get());
+        dropSelf(ModBlocks.TEST.get());
+        dropSelf(ModBlocks.MECHANICAL_RECORD_PLAYER.get());
     }
 
     @Override
-    protected Iterable<Block> getKnownBlocks() {
-        return ModBlocks.BLOCKS.getEntries().stream().map(Holder::value)::iterator;
+    protected @NotNull Iterable<Block> getKnownBlocks() {
+        return CreateAudio.registrate().getAll(Registries.BLOCK).stream().map(Supplier::get).collect(Collectors.toList());
     }
 }

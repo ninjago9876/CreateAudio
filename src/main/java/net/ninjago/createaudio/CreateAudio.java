@@ -1,6 +1,9 @@
 package net.ninjago.createaudio;
 
 import com.mojang.logging.LogUtils;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -12,8 +15,9 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.ninjago.createaudio.block.ModBlocks;
-import net.ninjago.createaudio.item.ModItems;
+import net.ninjago.createaudio.registry.ModBlockEntityTypes;
+import net.ninjago.createaudio.registry.ModBlocks;
+import net.ninjago.createaudio.registry.ModItems;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
@@ -24,14 +28,23 @@ public class CreateAudio
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    private static final CreateRegistrate REGISTRATE = CreateRegistrate.create(MODID);
+
+    public static CreateRegistrate registrate() {
+        return REGISTRATE;
+    }
+
     public CreateAudio(IEventBus modEventBus, ModContainer modContainer)
     {
         modEventBus.addListener(this::commonSetup);
 
         NeoForge.EVENT_BUS.register(this);
 
-        ModItems.register(modEventBus);
-        ModBlocks.register(modEventBus);
+        REGISTRATE.registerEventListeners(modEventBus);
+
+        ModItems.register();
+        ModBlockEntityTypes.register();
+        ModBlocks.register();
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
