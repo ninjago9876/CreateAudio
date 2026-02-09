@@ -9,6 +9,18 @@ public abstract class AudioNode {
     private final List<AudioOutput> nextOutputs = new ArrayList<>();
     private final List<AudioOutput> outputs = new ArrayList<>();
 
+    private String group = "";
+
+    private AudioNetwork parentNetwork;
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
     public AudioOutput getOutput(int index) throws IndexOutOfBoundsException {
         if (index < 0) {
             throw new IndexOutOfBoundsException();
@@ -17,6 +29,14 @@ public abstract class AudioNode {
             throw new IndexOutOfBoundsException();
         }
         return outputs.get(index);
+    }
+
+    public void setParentNetwork(AudioNetwork network) {
+        parentNetwork = network;
+    }
+
+    public AudioNetwork getParentNetwork() {
+        return parentNetwork;
     }
 
     protected void pushAudioFrame(float[] frame, int index) {

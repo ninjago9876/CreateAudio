@@ -34,6 +34,8 @@ public class CreateAudio
 
     private static final CreateRegistrate REGISTRATE = CreateRegistrate.create(MODID);
 
+    public static AudioEngine audioEngine;
+
     public static CreateRegistrate registrate() {
         return REGISTRATE;
     }
@@ -53,8 +55,7 @@ public class CreateAudio
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
-    private void commonSetup(final FMLCommonSetupEvent event)
-    {
+    private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("HELLO FROM COMMON SETUP");
     }
 
@@ -63,12 +64,15 @@ public class CreateAudio
         MinecraftServer server = event.getServer();
         AudioEngine engine = new AudioEngine();
         engine.start();
-        AudioEngineRegistry.attach(server, engine);
+        audioEngine = engine;
+//        AudioEngineRegistry.attach(server, engine);
     }
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-        AudioEngineRegistry.remove(event.getServer()).shutdown();
+//        AudioEngineRegistry.remove(event.getServer()).shutdown();
+        audioEngine.shutdown();
+        audioEngine = null;
     }
 
     @EventBusSubscriber(modid = MODID, value = Dist.CLIENT)

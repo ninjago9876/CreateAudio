@@ -17,6 +17,8 @@ public class AudioEngine implements Runnable {
 
     private final List<AudioNetwork> networks = new ArrayList<>();
 
+    public final AudioNetwork testNetwork = new AudioNetwork();
+
     public AudioEngine() {
         thread = new Thread(this);
     }
@@ -29,14 +31,13 @@ public class AudioEngine implements Runnable {
         running = false;
     }
 
+    public void addNetwork(AudioNetwork network) {
+        networks.add(network);
+    }
+
     @Override
     public void run() {
-        SynthesizerNode synthesizerNode = new SynthesizerNode();
-        AudioNetwork testNetwork = new AudioNetwork(synthesizerNode);
         networks.addLast(testNetwork);
-        DebugLogNode logNode = new DebugLogNode();
-        logNode.attachInput(synthesizerNode.getOutput(0), 0);
-        testNetwork.addNode(logNode);
 
         long targetFrameTime = (long) ((1000_000_000f / SAMPLING_RATE) * FRAME_SIZE);
         CreateAudio.LOGGER.info(String.valueOf(targetFrameTime));

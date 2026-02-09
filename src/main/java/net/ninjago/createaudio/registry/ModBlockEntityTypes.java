@@ -9,6 +9,9 @@ import net.ninjago.createaudio.CreateAudio;
 import net.ninjago.createaudio.content.mechanicalRecordPlayer.RecordPlayerBlockEntity;
 import net.ninjago.createaudio.content.mechanicalRecordPlayer.RecordPlayerBlockEntityRenderer;
 import net.ninjago.createaudio.content.mechanicalRecordPlayer.RecordPlayerVisual;
+import net.ninjago.createaudio.content.mechanicalSpeaker.MechanicalSpeakerBlockEntity;
+import net.ninjago.createaudio.content.mechanicalSpeaker.MechanicalSpeakerBlockEntityRenderer;
+import net.ninjago.createaudio.content.mechanicalSpeaker.MechanicalSpeakerVisual;
 
 public class ModBlockEntityTypes {
     private static final CreateRegistrate REGISTRATE = CreateAudio.registrate();
@@ -18,6 +21,13 @@ public class ModBlockEntityTypes {
             .visual(() -> RecordPlayerVisual::new)
             .validBlocks(ModBlocks.MECHANICAL_RECORD_PLAYER)
             .renderer(() -> RecordPlayerBlockEntityRenderer::new)
+            .register();
+
+    public static final BlockEntityEntry<MechanicalSpeakerBlockEntity> MECHANICAL_SPEAKER = REGISTRATE
+            .blockEntity("mechanical_speaker", MechanicalSpeakerBlockEntity::new)
+            .visual(() -> MechanicalSpeakerVisual::new)
+            .validBlocks(ModBlocks.MECHANICAL_SPEAKER)
+            .renderer(() -> MechanicalSpeakerBlockEntityRenderer::new)
             .register();
 
     public static void register() {

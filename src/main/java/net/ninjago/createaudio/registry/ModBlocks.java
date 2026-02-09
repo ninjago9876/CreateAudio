@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.MapColor;
 import net.ninjago.createaudio.CreateAudio;
 import net.ninjago.createaudio.content.mechanicalRecordPlayer.RecordPlayerBlock;
+import net.ninjago.createaudio.content.mechanicalSpeaker.MechanicalSpeakerBlock;
 
 import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
@@ -36,7 +37,21 @@ public class ModBlocks {
             .loot(RegistrateBlockLootTables::dropSelf)
             .blockstate((ctx, prov) ->
                     prov.simpleBlock(ctx.getEntry(), AssetLookup.partialBaseModel(ctx, prov)))
-            .lang("Mechanical MP3 Player")
+            .lang("Mechanical Record Player")
+            .item()
+            .transform(customItemModel())
+            .register();
+
+    public static final BlockEntry<MechanicalSpeakerBlock> MECHANICAL_SPEAKER = REGISTRATE.block("mechanical_speaker", MechanicalSpeakerBlock::new)
+            .properties(properties -> properties
+                    .strength(5)
+                    .noOcclusion()
+                    .mapColor(MapColor.STONE)
+            )
+            .loot(RegistrateBlockLootTables::dropSelf)
+            .blockstate((ctx, prov) ->
+                    prov.simpleBlock(ctx.getEntry(), AssetLookup.partialBaseModel(ctx, prov)))
+            .lang("Mechanical Speaker")
             .item()
             .transform(customItemModel())
             .register();
