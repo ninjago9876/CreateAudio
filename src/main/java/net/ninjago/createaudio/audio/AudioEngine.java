@@ -3,6 +3,7 @@ package net.ninjago.createaudio.audio;
 import net.ninjago.createaudio.CreateAudio;
 import net.ninjago.createaudio.audio.nodes.DebugLogNode;
 import net.ninjago.createaudio.audio.nodes.SynthesizerNode;
+import net.ninjago.createaudio.audio.tasks.AudioNetworkTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,22 +18,26 @@ public class AudioEngine implements Runnable {
 
     private final List<AudioNetwork> networks = new ArrayList<>();
 
+    private AudioNetworkTask processingTask;
+    private final List<AudioNetworkTask> taskQueue = new ArrayList<>();
+
     public final AudioNetwork testNetwork = new AudioNetwork();
 
     public AudioEngine() {
         thread = new Thread(this);
     }
 
+    public void enqueueTask(AudioNetworkTask task) {
+        taskQueue.add(task);
+    }
+
     public void start() {
+        thread.setName("Audio Process Thread");
         thread.start();
     }
 
     public void shutdown() {
         running = false;
-    }
-
-    public void addNetwork(AudioNetwork network) {
-        networks.add(network);
     }
 
     @Override
@@ -97,6 +102,13 @@ public class AudioEngine implements Runnable {
     }
 
     private void processAudioFrame(long currentFrame) {
+        if (processingTask.isFinished()) {
+            networks = processingTask.getResult();
+        }
+        if (!taskQueue.isEmpty() & processingTask.isFinished()) {
+            processingTask = taskQueue.removeFirst();
+
+        }
         for (AudioNetwork network : networks) {
             network.tickNetwork(currentFrame);
         }
