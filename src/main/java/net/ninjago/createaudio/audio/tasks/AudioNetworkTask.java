@@ -3,20 +3,20 @@ package net.ninjago.createaudio.audio.tasks;
 import net.ninjago.createaudio.audio.AudioNetwork;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class AudioNetworkTask implements Runnable {
-    private List<AudioNetwork> result;
-    private List<AudioNetwork> currentNetworks;
+    private HashMap<Integer, AudioNetwork> result;
+    private HashMap<Integer, AudioNetwork> input;
 
-    private boolean finished = false;
+    private volatile boolean finished = false;
 
     private Thread thread;
 
-    protected abstract AudioNetwork modifyNetwork(AudioNetwork network, int index);
+    protected abstract HashMap<Integer, AudioNetwork> modify(HashMap<Integer, AudioNetwork> input);
 
-    public @Nullable List<AudioNetwork> getResult() {
+    public @Nullable HashMap<Integer, AudioNetwork> getResult() {
         return result;
     }
 
@@ -26,18 +26,18 @@ public abstract class AudioNetworkTask implements Runnable {
 
     @Override
     public void run() {
-        result = new ArrayList<>();
-        int index = 0;
-        for (AudioNetwork network : currentNetworks) {
-            result.add(modifyNetwork(network, index));
-            index++;
+        HashMap<Integer, AudioNetwork> clonedInput = new HashMap<>();
+        for (Map.Entry<Integer, AudioNetwork> entry : input.entrySet()) {
+            clonedInput.put(entry.getKey(), entry.getValue().clone());
         }
+
+        result = modify(clonedInput);
         finished = true;
     }
 
-    public void start(List<AudioNetwork> currentNetworks) {
+    public void start(HashMap<Integer, AudioNetwork> input) {
         thread = new Thread(this);
-        this.currentNetworks = currentNetworks;
+        this.input = input;
         thread.start();
     }
 }

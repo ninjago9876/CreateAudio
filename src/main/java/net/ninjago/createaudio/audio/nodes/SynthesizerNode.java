@@ -10,8 +10,13 @@ import net.ninjago.createaudio.voicechat.SimpleVoiceChatPlugin;
 
 public class SynthesizerNode extends AudioNode {
 
-    public SynthesizerNode() {
+    public SynthesizerNode(AudioEngine engine) {
+        super(engine);
         addOutput(new AudioOutput(new float[AudioEngine.FRAME_SIZE]));
+    }
+
+    protected SynthesizerNode(AudioNode node) {
+        super(node);
     }
 
     @Override
@@ -26,5 +31,10 @@ public class SynthesizerNode extends AudioNode {
         }
 
         pushAudioFrame(frame, 0);
+    }
+
+    @Override
+    public AudioNode clone() {
+        return new SynthesizerNode(this);
     }
 }
