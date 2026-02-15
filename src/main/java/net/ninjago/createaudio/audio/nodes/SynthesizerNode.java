@@ -1,12 +1,8 @@
 package net.ninjago.createaudio.audio.nodes;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.server.MinecraftServer;
 import net.ninjago.createaudio.audio.AudioEngine;
-import net.ninjago.createaudio.audio.AudioEngineRegistry;
 import net.ninjago.createaudio.audio.AudioNode;
-import net.ninjago.createaudio.audio.AudioOutput;
-import net.ninjago.createaudio.voicechat.SimpleVoiceChatPlugin;
+import net.ninjago.createaudio.audio.utility.AudioOutput;
 
 public class SynthesizerNode extends AudioNode {
 

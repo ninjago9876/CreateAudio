@@ -1,54 +1,25 @@
 package net.ninjago.createaudio.content.mechanicalRecordPlayer;
 
-import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.ninjago.createaudio.CreateAudio;
-import net.ninjago.createaudio.audio.AudioEngine;
 import net.ninjago.createaudio.audio.AudioNetwork;
 import net.ninjago.createaudio.audio.nodes.SynthesizerNode;
-import net.ninjago.createaudio.foundation.ModularNetworkHandler;
+import net.ninjago.createaudio.audio.utility.AudioOutputLocation;
+import net.ninjago.createaudio.foundation.blockentity.KineticAudioBlockEntity;
 
-public class RecordPlayerBlockEntity extends KineticBlockEntity {
+public class RecordPlayerBlockEntity extends KineticAudioBlockEntity {
     protected String audioFile = "";
     protected boolean playing = false;
 
-    private AudioEngine engine;
-
-    private ModularNetworkHandler networkHandler;
-
     public RecordPlayerBlockEntity(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
-        super(typeIn, pos, state);
-    }
-
-    @Override
-    public void onLoad() {
-        super.onLoad();
-
-        if (getLevel() != null) {
-            if (getLevel().isClientSide()) return;
-        }
-
-        engine = CreateAudio.audioEngine;
-        if (engine == null) {
-            return;
-        }
-
-        networkHandler = new ModularNetworkHandler(engine, () -> {
+        super(typeIn, pos, state, (engine, inputs, outputs) -> {
             AudioNetwork net = new AudioNetwork(engine);
-            net.addNode(new SynthesizerNode(engine));
+            SynthesizerNode synthesizerNode = new SynthesizerNode(engine);
+            outputs.put("0", new AudioOutputLocation(net.getUid(), synthesizerNode.getUid(), 0));
+            net.addNode(synthesizerNode);
             return net;
         }, "record_player");
-    }
-
-    @Override
-    public void remove() {
-        if (getLevel() != null) {
-            if (getLevel().isClientSide()) return;
-        }
-        super.remove();
-        networkHandler.remove();
     }
 
     @Override

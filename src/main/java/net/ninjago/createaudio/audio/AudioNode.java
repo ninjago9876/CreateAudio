@@ -1,7 +1,8 @@
 package net.ninjago.createaudio.audio;
 
+import net.ninjago.createaudio.audio.utility.AudioOutput;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public abstract class AudioNode {
@@ -76,7 +77,12 @@ public abstract class AudioNode {
         }
     }
 
+    // TODO - Use Map of inputs instead
     public void attachInput(AudioOutput output, int index) throws IndexOutOfBoundsException {
+        throw new IndexOutOfBoundsException();
+    }
+
+    public void detachInput(AudioOutput output, int index) {
         throw new IndexOutOfBoundsException();
     }
 

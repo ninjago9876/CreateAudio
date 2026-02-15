@@ -1,8 +1,6 @@
 package net.ninjago.createaudio.audio;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class AudioNetwork {
     private final AudioEngine engine;
@@ -21,11 +19,11 @@ public class AudioNetwork {
     }
 
     public void addNode(AudioNode node) {
-        if (node.getParentNetwork() != null) {
-            nodes.putAll(node.getParentNetwork().nodes);
-            return;
-        }
         nodes.put(node.getUid(), node);
+    }
+
+    public void addNodes(Map<Integer, AudioNode> nodes) {
+        this.nodes.putAll(nodes);
     }
 
     public <T extends AudioNode> List<T> getNodes(Class<T> type) {

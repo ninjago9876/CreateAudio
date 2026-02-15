@@ -56,5 +56,6 @@ public class ModBlocks {
             .transform(customItemModel())
             .register();
 
-    public static void register() { }
+    public static void register() {
+    }
 }

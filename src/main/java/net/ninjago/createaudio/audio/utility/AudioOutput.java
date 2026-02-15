@@ -1,4 +1,4 @@
-package net.ninjago.createaudio.audio;
+package net.ninjago.createaudio.audio.utility;
 
 public class AudioOutput {
     private float[] audioFrame;

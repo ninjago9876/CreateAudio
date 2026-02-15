@@ -111,7 +111,8 @@ public class AudioEngine implements Runnable {
             processAudioFrame(framePosition);
             long waitTimestamp = startTime + framePosition * FRAME_DURATION_NS;
 
-            CreateAudio.LOGGER.info(String.valueOf(framePosition));
+//            CreateAudio.LOGGER.info(String.valueOf(framePosition));
+            CreateAudio.LOGGER.info(processingNetworks.toString());
 
             long waitNanos = waitTimestamp - System.nanoTime();
 
@@ -126,21 +127,6 @@ public class AudioEngine implements Runnable {
     }
 
     private void processAudioFrame(long currentFrame) {
-//        boolean available = currentTask == null;
-//        if (!available) {
-//            available = currentTask.isFinished();
-//            if (available) {
-//                processingNetworks = currentTask.getResult();
-//                currentTask = null;
-//            }
-//        }
-//
-//        if (!taskQueue.isEmpty()) {
-//            if (available) {
-//                currentTask = taskQueue.poll();
-//                currentTask.start(processingNetworks);
-//            }
-//        }
         if (currentTask != null) {
             if (currentTask.isFinished()) {
                 processingNetworks = currentTask.getResult();
