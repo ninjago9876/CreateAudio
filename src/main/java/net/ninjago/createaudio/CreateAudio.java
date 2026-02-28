@@ -60,12 +60,10 @@ public class CreateAudio
     public void onServerStarting(ServerStartingEvent event) {
         audioEngine = new AudioEngine();
         audioEngine.start();
-//        AudioEngineRegistry.attach(server, engine);
     }
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
-//        AudioEngineRegistry.remove(event.getServer()).shutdown();
         audioEngine.shutdown();
         audioEngine = null;
     }

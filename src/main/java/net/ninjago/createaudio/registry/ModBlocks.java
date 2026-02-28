@@ -1,6 +1,7 @@
 package net.ninjago.createaudio.registry;
 
 import com.simibubi.create.foundation.data.AssetLookup;
+import com.simibubi.create.foundation.data.BlockStateGen;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
 import com.tterrag.registrate.util.entry.BlockEntry;
@@ -15,17 +16,6 @@ import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
 
 public class ModBlocks {
     private static final CreateRegistrate REGISTRATE = CreateAudio.registrate();
-
-    public static final BlockEntry<Block> TEST =
-            REGISTRATE.block("test", Block::new)
-                    .properties(properties -> properties
-                            .requiresCorrectToolForDrops()
-                            .strength(5)
-                    )
-                    .loot(RegistrateBlockLootTables::dropSelf)
-                    .lang("Block of Test")
-                    .item().build()
-                    .register();
 
     public static final BlockEntry<RecordPlayerBlock> MECHANICAL_RECORD_PLAYER = REGISTRATE.block("mechanical_record_player", RecordPlayerBlock::new)
             .properties(properties -> properties
@@ -49,8 +39,7 @@ public class ModBlocks {
                     .mapColor(MapColor.STONE)
             )
             .loot(RegistrateBlockLootTables::dropSelf)
-            .blockstate((ctx, prov) ->
-                    prov.simpleBlock(ctx.getEntry(), AssetLookup.partialBaseModel(ctx, prov)))
+            .blockstate(BlockStateGen.directionalBlockProvider(true))
             .lang("Mechanical Speaker")
             .item()
             .transform(customItemModel())

@@ -1,8 +1,7 @@
 package net.ninjago.createaudio.audio;
 
-import net.ninjago.createaudio.audio.processors.IAudioProcessor;
-import net.ninjago.createaudio.audio.processors.AudioProcessor;
-import net.ninjago.createaudio.audio.tasks.NodeGraphTask;
+import net.ninjago.createaudio.audio.processor.IAudioProcessor;
+import net.ninjago.createaudio.audio.processor.AudioProcessor;
 
 public class AudioEngine {
     private final IAudioProcessor audioProcessor;
@@ -21,10 +20,6 @@ public class AudioEngine {
 
     public void shutdown() {
         audioProcessor.stop();
-    }
-
-    public void enqueueTask(NodeGraphTask task) {
-        audioProcessor.enqueueTask(task);
     }
 
     private int uidCounter = 0;

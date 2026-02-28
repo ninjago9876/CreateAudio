@@ -13,7 +13,7 @@ public class MechanicalSpeakerVisual extends SingleAxisRotatingVisual<Mechanical
     private final MechanicalSpeakerBlockEntity speaker;
 
     public MechanicalSpeakerVisual(VisualizationContext context, MechanicalSpeakerBlockEntity blockEntity, float partialTick) {
-        super(context, blockEntity, partialTick, Models.partial(AllPartialModels.SHAFT_HALF));
+        super(context, blockEntity, partialTick, Models.partial(AllPartialModels.SHAFTLESS_COGWHEEL));
 
         speaker = blockEntity;
     }

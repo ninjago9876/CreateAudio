@@ -1,7 +1,7 @@
 package net.ninjago.createaudio.content.mechanicalSpeaker;
 
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
-import com.simibubi.create.content.kinetics.drill.DrillBlockEntity;
+import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ninjago.createaudio.registry.ModBlockEntityTypes;
 
-public class MechanicalSpeakerBlock extends DirectionalKineticBlock implements IBE<MechanicalSpeakerBlockEntity>, SimpleWaterloggedBlock {
+public class MechanicalSpeakerBlock extends DirectionalKineticBlock implements IBE<MechanicalSpeakerBlockEntity>, SimpleWaterloggedBlock, ICogWheel {
     public MechanicalSpeakerBlock(Properties properties) {
         super(properties);
     }

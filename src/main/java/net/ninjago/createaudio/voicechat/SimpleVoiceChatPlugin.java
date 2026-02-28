@@ -33,7 +33,6 @@ public class SimpleVoiceChatPlugin implements VoicechatPlugin {
     }
 
     private void onServerStarted(VoicechatServerStartedEvent event) {
-        CreateAudio.LOGGER.info("VC Server Started");
         serverApi = event.getVoicechat();
         apiFuture.complete(serverApi);
     }
