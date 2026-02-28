@@ -2,48 +2,30 @@ package net.ninjago.createaudio.audio.nodes;
 
 import net.ninjago.createaudio.CreateAudio;
 import net.ninjago.createaudio.audio.AudioEngine;
-import net.ninjago.createaudio.audio.AudioNode;
-import net.ninjago.createaudio.audio.utility.AudioOutput;
+import net.ninjago.createaudio.audio.utility.AudioBuffer;
 
 import java.util.Arrays;
 
 public class DebugLogNode extends AudioNode {
-    private AudioOutput loggedSignal;
 
-    public DebugLogNode(AudioEngine engine) {
-        super(engine);
+    public DebugLogNode(int uid) {
+        super(uid);
     }
 
-    protected DebugLogNode(DebugLogNode otherNode) {
+    public DebugLogNode(DebugLogNode otherNode) {
         super(otherNode);
-        loggedSignal = otherNode.loggedSignal;
-    }
-
-    @Override
-    public void attachInput(AudioOutput output, int index) throws IndexOutOfBoundsException {
-        if (index == 0) {
-            loggedSignal = output;
-            return;
-        }
-        super.attachInput(output, index);
-    }
-
-    @Override
-    public void detachInput(AudioOutput output, int index) {
-        if (index == 0) {
-            loggedSignal = null;
-            return;
-        }
-        super.detachInput(output, index);
     }
 
     @Override
     public void process(long currentFrame) {
-        if (loggedSignal == null) {
-//            CreateAudio.LOGGER.info("{} : No signal to log!", getUid());
+        AudioBuffer input = getInput(0);
+        if (input == null) {
+            if (currentFrame % 100 == 0) {
+                CreateAudio.LOGGER.info("No signal to log!");
+            }
             return;
         }
-        CreateAudio.LOGGER.info(Arrays.toString(loggedSignal.getAudioFrame()));
+        CreateAudio.LOGGER.info(Arrays.toString(input.get()));
     }
 
     @Override

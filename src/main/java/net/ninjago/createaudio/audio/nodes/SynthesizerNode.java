@@ -1,18 +1,16 @@
 package net.ninjago.createaudio.audio.nodes;
 
 import net.ninjago.createaudio.audio.AudioEngine;
-import net.ninjago.createaudio.audio.AudioNode;
-import net.ninjago.createaudio.audio.utility.AudioOutput;
 
 public class SynthesizerNode extends AudioNode {
 
-    public SynthesizerNode(AudioEngine engine) {
-        super(engine);
-        addOutput(new AudioOutput(new float[AudioEngine.FRAME_SIZE]));
+    public SynthesizerNode(int uid) {
+        super(uid);
+        addOutput();    // 0
     }
 
-    protected SynthesizerNode(AudioNode node) {
-        super(node);
+    protected SynthesizerNode(AudioNode otherNode) {
+        super(otherNode);
     }
 
     @Override

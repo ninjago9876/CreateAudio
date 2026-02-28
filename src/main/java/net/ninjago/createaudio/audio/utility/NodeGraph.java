@@ -1,21 +1,30 @@
-package net.ninjago.createaudio.audio;
+package net.ninjago.createaudio.audio.utility;
 
-import java.util.*;
+import net.ninjago.createaudio.audio.nodes.AudioNode;
+import net.ninjago.createaudio.audio.tasks.NodeGraphTask;
 
-public class AudioNetwork {
-    private final AudioEngine engine;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-    private final HashMap<Integer, AudioNode> nodes = new HashMap<>();
+public class NodeGraph {
+    private final Map<Integer, AudioNode> nodes;
+
     private final int uid;
 
-    public AudioNetwork(AudioEngine engine) {
-        this.engine = engine;
-        this.uid = engine.allocateUID();
+    public NodeGraph(NodeGraph input) {
+        nodes = new HashMap<>(input.nodes);
+        uid = input.uid;
     }
 
-    public AudioNetwork(AudioNetwork network) {
-        this.engine = network.engine;
-        this.uid = network.uid;
+    public NodeGraph(Integer uid) {
+        nodes = new HashMap<>();
+        this.uid = uid;
+    }
+
+    public int getUid() {
+        return uid;
     }
 
     public void addNode(AudioNode node) {
@@ -62,26 +71,5 @@ public class AudioNetwork {
 
     public AudioNode getNode(int uid) {
         return nodes.get(uid);
-    }
-
-    public void tickNetwork(long currentFrame) {
-        for (AudioNode node : nodes.values()) {
-            node.process(currentFrame);
-        }
-        for (AudioNode node : nodes.values()) {
-            node.pushOutput();
-        }
-    }
-
-    public AudioNetwork clone() {
-        AudioNetwork networkClone = new AudioNetwork(this);
-        for (AudioNode node : nodes.values()) {
-            networkClone.nodes.put(node.getUid(), node.clone());
-        }
-        return networkClone;
-    }
-
-    public int getUid() {
-        return uid;
     }
 }

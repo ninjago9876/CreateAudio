@@ -1,11 +1,9 @@
 package net.ninjago.createaudio.audio.tasks;
 
-import net.ninjago.createaudio.audio.AudioNetwork;
-import net.ninjago.createaudio.audio.AudioNode;
+import net.ninjago.createaudio.audio.nodes.AudioNode;
+import net.ninjago.createaudio.audio.utility.NodeGraph;
 
-import java.util.HashMap;
-
-public class RemoveGroupTask extends AudioNetworkTask {
+public class RemoveGroupTask extends NodeGraphTask {
     private final String group;
 
     public RemoveGroupTask(String group) {
@@ -13,10 +11,10 @@ public class RemoveGroupTask extends AudioNetworkTask {
     }
 
     @Override
-    protected HashMap<Integer, AudioNetwork> modify(HashMap<Integer, AudioNetwork> input) {
-        for (AudioNetwork network : input.values()) {
-            for (AudioNode node : network.getNodesByGroup(group)) {
-                network.removeNode(node.getUid());
+    protected NodeGraph modify(NodeGraph input) {
+        for (int uid : input.getNodes().keySet()) {
+            if (input.getNode(uid).getGroup().equals(group)) {
+                input.removeNode(uid);
             }
         }
         return input;

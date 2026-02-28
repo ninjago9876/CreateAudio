@@ -1,7 +1,7 @@
 package net.ninjago.createaudio.foundation.blockentity;
 
-import com.mojang.datafixers.util.Function3;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
+import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -11,22 +11,19 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.ninjago.createaudio.CreateAudio;
 import net.ninjago.createaudio.audio.AudioEngine;
-import net.ninjago.createaudio.audio.AudioNetwork;
-import net.ninjago.createaudio.audio.utility.AudioInputLocation;
-import net.ninjago.createaudio.audio.utility.AudioOutputLocation;
 import net.ninjago.createaudio.foundation.AudioManager;
 import net.ninjago.createaudio.foundation.ModularNetworkHandler;
 
 import java.util.*;
 
 public class KineticAudioBlockEntity extends KineticBlockEntity implements AudioManager {
-    private AudioEngine engine;
+    protected AudioEngine engine;
     private ModularNetworkHandler networkHandler;
 
-    private final Function3<AudioEngine, Map<String, AudioInputLocation>, Map<String, AudioOutputLocation>, AudioNetwork> networkSupplier;
+    private final ModularNetworkHandler.ModularNetworkGraphSupplier graphSupplier;
 
-    public record WorldBlockAudioOutputSocket(BlockPos pos, String socketId) { }
-    protected final Map<String, WorldBlockAudioOutputSocket> worldConnections = new HashMap<>();    // InputSocketID -> OutputSocket
+    public record BlockModularNetworkSocket(BlockPos pos, int index) { }
+    protected final Map<Integer, BlockModularNetworkSocket> worldConnections = new HashMap<>();    // InputSocketIndex -> OutputSocket
 
     private final String name;
 
@@ -34,11 +31,11 @@ public class KineticAudioBlockEntity extends KineticBlockEntity implements Audio
             BlockEntityType<?> typeIn,
             BlockPos pos,
             BlockState state,
-            Function3<AudioEngine, Map<String, AudioInputLocation>, Map<String, AudioOutputLocation>, AudioNetwork> networkSupplier,
+            ModularNetworkHandler.ModularNetworkGraphSupplier graphSupplier,
             String name
     ) {
         super(typeIn, pos, state);
-        this.networkSupplier = networkSupplier;
+        this.graphSupplier = graphSupplier;
         this.name = name;
     }
 
@@ -55,16 +52,20 @@ public class KineticAudioBlockEntity extends KineticBlockEntity implements Audio
             return;
         }
 
-        networkHandler = new ModularNetworkHandler(engine, networkSupplier, name);
+       networkHandler = new ModularNetworkHandler(engine, graphSupplier, name);
+
+        for (int inputIndex : worldConnections.keySet()) {
+            BlockModularNetworkSocket outputSocket = worldConnections.get(inputIndex);
+            createConnection(outputSocket, inputIndex);
+        }
     }
 
     @Override
     public void remove() {
-        if (getLevel() != null) {
-            if (getLevel().isClientSide()) return;
+        if (networkHandler != null) {
+            networkHandler.remove();
         }
         super.remove();
-        networkHandler.remove();
     }
 
     @Override
@@ -72,79 +73,79 @@ public class KineticAudioBlockEntity extends KineticBlockEntity implements Audio
         return networkHandler;
     }
 
-    protected void createConnection(WorldBlockAudioOutputSocket fromOutputSocket, String toInputId) {
-        CreateAudio.LOGGER.info("Creating connection!");
-        worldConnections.put(toInputId, fromOutputSocket);
-        assert level != null;
-        BlockEntity sourceBlockEntity = level.getBlockEntity(fromOutputSocket.pos);
-        if (!(sourceBlockEntity instanceof AudioManager sourceBlockAudioManager)) return;
-        networkHandler.connectWith(
-                new ModularNetworkHandler.ModularNetworkSocket(
-                        fromOutputSocket.socketId,
-                        sourceBlockAudioManager.getNetworkHandler()
-                ),
-                toInputId
-        );
+    protected void createConnection(BlockModularNetworkSocket fromOutputSocket, int toInputIndex) {
+        worldConnections.put(toInputIndex, fromOutputSocket);
+
+        if (level == null || level.isClientSide)
+            return;
+        CreateAudio.LOGGER.info("Creating connection from {} : {} to {} : {}!", fromOutputSocket.pos, fromOutputSocket.index, getBlockPos(), toInputIndex);
+
+        BlockEntity blockEntity = level.getBlockEntity(fromOutputSocket.pos);
+
+        if (blockEntity instanceof AudioManager fromAudioManager) {
+            networkHandler.connect(fromAudioManager.getNetworkHandler(), fromOutputSocket.index, toInputIndex);
+        }
+
     }
 
-    protected void removeConnection(String toInputId) {
-        CreateAudio.LOGGER.info("Removing connection!");
-        WorldBlockAudioOutputSocket outputSocket = worldConnections.remove(toInputId);
-        assert level != null;
-        BlockEntity sourceBlockEntity = level.getBlockEntity(outputSocket.pos);
-        if (!(sourceBlockEntity instanceof AudioManager sourceBlockAudioManager)) return;
-        networkHandler.disconnectWith(new ModularNetworkHandler.ModularNetworkSocket(outputSocket.socketId, sourceBlockAudioManager.getNetworkHandler()), toInputId);
+    protected void removeConnection(int toInputIndex) {
+        worldConnections.remove(toInputIndex);
+
+        if (level == null || level.isClientSide)
+            return;
+        CreateAudio.LOGGER.info("Removing connection to input {}", toInputIndex);
+    }
+
+    protected void updateConnections(Map<Integer, BlockModularNetworkSocket> newWorldConnections) {
+        Map<Integer, BlockModularNetworkSocket> currentWorldConnections = new HashMap<>(worldConnections);
+
+        Set<Integer> toRemove = new HashSet<>(currentWorldConnections.keySet());
+        toRemove.removeAll(newWorldConnections.keySet());
+        for (Integer socketId : toRemove) {
+            removeConnection(socketId);
+        }
+
+        Set<Integer> toAdd = new HashSet<>(newWorldConnections.keySet());
+        toAdd.removeAll(currentWorldConnections.keySet());
+        for (Integer inputIndex : toAdd) {
+            createConnection(newWorldConnections.get(inputIndex), inputIndex);
+        }
+
+        for (Integer inputIndex : currentWorldConnections.keySet()) {
+            if (newWorldConnections.containsKey(inputIndex) && !Objects.equals(currentWorldConnections.get(inputIndex), newWorldConnections.get(inputIndex))) {
+                removeConnection(inputIndex);
+                createConnection(newWorldConnections.get(inputIndex), inputIndex);
+            }
+        }
     }
 
     @Override
     protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-        Map<String, WorldBlockAudioOutputSocket> newWorldConnections = new HashMap<>();
+        super.read(compound, registries, clientPacket);
 
-        if (level == null) {
-            super.read(compound, registries, clientPacket);
-            return;
-        }
+        Map<Integer, BlockModularNetworkSocket> newWorldConnections = new HashMap<>();
 
         CompoundTag connections = compound.getCompound("Connections");
-        for (String outputSocketId : connections.getAllKeys()) {
-            CompoundTag outputSocketTag = connections.getCompound(outputSocketId);
-            WorldBlockAudioOutputSocket inputSocket = new WorldBlockAudioOutputSocket(
-                    getPosFromTag(outputSocketTag.getCompound("Pos")),
-                    Objects.requireNonNull(outputSocketTag.get("OutputSocketID")).getAsString()
+        for (String inputSocketIndex : connections.getAllKeys()) {
+            CompoundTag outputSocketTag = connections.getCompound(inputSocketIndex);
+            BlockModularNetworkSocket inputSocket = new BlockModularNetworkSocket(
+                    NBTHelper.readBlockPos(outputSocketTag, "Pos"),
+                    outputSocketTag.getInt("OutputSocketIndex")
             );
-            newWorldConnections.put(outputSocketId, inputSocket);
+            newWorldConnections.put(Integer.valueOf(inputSocketIndex), inputSocket);
         }
 
-        Set<String> toRemove = new HashSet<>(worldConnections.keySet());
-        toRemove.removeAll(newWorldConnections.keySet());
-        for (String socketId : toRemove) {
-            removeConnection(socketId);
-        }
-
-        Set<String> toAdd = new HashSet<>(newWorldConnections.keySet());
-        toAdd.removeAll(worldConnections.keySet());
-        for (String socketId : toAdd) {
-            createConnection(newWorldConnections.get(socketId), socketId);
-        }
-
-        for (String inputId : worldConnections.keySet()) {
-            if (newWorldConnections.containsKey(inputId) && !Objects.equals(worldConnections.get(inputId), newWorldConnections.get(inputId))) {
-                removeConnection(inputId);
-                createConnection(newWorldConnections.get(inputId), inputId);
-            }
-        }
-
-        super.read(compound, registries, clientPacket);
+        updateConnections(newWorldConnections);
     }
 
     @Override
     protected void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
         CompoundTag connections = new CompoundTag();
-        for (String fromSocketId : worldConnections.keySet()) {
+        for (Integer fromSocketIndex : worldConnections.keySet()) {
             CompoundTag worldInputSocket = new CompoundTag();
-            worldInputSocket.put("Pos", NbtUtils.writeBlockPos(worldConnections.get(fromSocketId).pos));
-            worldInputSocket.putString("OutputSocketID", worldConnections.get(fromSocketId).socketId);
-            connections.put(fromSocketId, worldInputSocket);
+            worldInputSocket.put("Pos", NbtUtils.writeBlockPos(worldConnections.get(fromSocketIndex).pos));
+            worldInputSocket.putInt("OutputSocketIndex", worldConnections.get(fromSocketIndex).index);
+            connections.put(String.valueOf(fromSocketIndex), worldInputSocket);
         }
         compound.put("Connections", connections);
         super.write(compound, registries, clientPacket);
@@ -153,11 +154,11 @@ public class KineticAudioBlockEntity extends KineticBlockEntity implements Audio
     @Override
     public void writeSafe(CompoundTag tag, HolderLookup.Provider registries) {
         CompoundTag connections = new CompoundTag();
-        for (String fromSocketId : worldConnections.keySet()) {
+        for (Integer fromSocketIndex : worldConnections.keySet()) {
             CompoundTag worldInputSocket = new CompoundTag();
-            worldInputSocket.put("Pos", NbtUtils.writeBlockPos(worldConnections.get(fromSocketId).pos));
-            worldInputSocket.putString("OutputSocketID", worldConnections.get(fromSocketId).socketId);
-            connections.put(fromSocketId, worldInputSocket);
+            worldInputSocket.put("Pos", NbtUtils.writeBlockPos(worldConnections.get(fromSocketIndex).pos));
+            worldInputSocket.putInt("OutputSocketIndex", worldConnections.get(fromSocketIndex).index);
+            connections.put(String.valueOf(fromSocketIndex), worldInputSocket);
         }
         tag.put("Connections", connections);
         super.writeSafe(tag, registries);

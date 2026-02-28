@@ -1,74 +1,67 @@
 package net.ninjago.createaudio.foundation;
 
-import com.mojang.datafixers.util.Function3;
 import net.ninjago.createaudio.audio.AudioEngine;
-import net.ninjago.createaudio.audio.AudioNetwork;
-import net.ninjago.createaudio.audio.tasks.*;
-import net.ninjago.createaudio.audio.utility.AudioInputLocation;
-import net.ninjago.createaudio.audio.utility.AudioOutputLocation;
+import net.ninjago.createaudio.audio.tasks.ConnectNodesTask;
+import net.ninjago.createaudio.audio.tasks.MergeGraphTask;
+import net.ninjago.createaudio.audio.tasks.RemoveGroupTask;
+import net.ninjago.createaudio.audio.utility.NodeGraph;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ModularNetworkHandler {
     protected final AudioEngine engine;
-    private final Function3<AudioEngine, Map<String, AudioInputLocation>, Map<String, AudioOutputLocation>, AudioNetwork> networkSupplier;
+    private final ModularNetworkGraphSupplier graphSupplier;
+
+    public record ModularNetworkSocket(int nodeUid, int nodeSocketIndex) { }
+
+    private final ArrayList<ModularNetworkSocket> inputs = new ArrayList<>();
+    private final ArrayList<ModularNetworkSocket> outputs = new ArrayList<>();
+
+    private final HashMap<String, AtomicReference<Object>> references = new HashMap<>();
 
     private final String group;
-
-    private Map<String, AudioInputLocation> inputs = new HashMap<>();
-    private Map<String, AudioOutputLocation> outputs = new HashMap<>();
-
-    public record ModularNetworkSocket(String id, ModularNetworkHandler networkHandler) { }
-
-    private final Map<String, ModularNetworkSocket> connections = new HashMap<>();
-
-    private int networkUid;
+    private final int networkUid;
 
     public ModularNetworkHandler(
             AudioEngine engine,
-            Function3<AudioEngine, Map<String, AudioInputLocation>, Map<String, AudioOutputLocation>, AudioNetwork> networkSupplier,
+            ModularNetworkGraphSupplier graphSupplier,
             String name
     ) {
         this.engine = engine;
-        this.networkSupplier = networkSupplier;
+        this.graphSupplier = graphSupplier;
 
-        AudioNetwork network = networkSupplier.apply(engine, inputs, outputs);
-        networkUid = network.getUid();
+        NodeGraph graph = graphSupplier.get(engine, inputs, outputs, references);
+        networkUid = graph.getUid();
 
-        this.group = String.format("%1$s#%2$d", name, network.getUid());
-        network.setGroup(group);
+        this.group = String.format("%1$s#%2$d", name, graph.getUid());
+        graph.setGroup(group);
 
-        engine.enqueueTask(new AddNetworkTask(network));
+        engine.enqueueTask(new MergeGraphTask(graph));
     }
 
-    public Map<String, ModularNetworkSocket> getConnections() {
-        return Map.copyOf(connections);
+    public AtomicReference<Object> getReference(String key) {
+        return references.get(key);
     }
 
     public void remove() {
         engine.enqueueTask(new RemoveGroupTask(group));
     }
 
-    protected void createConnection(AudioOutputLocation fromLocation, AudioInputLocation toLocation) {
-        engine.enqueueTask(new MergeNetworkTask(networkUid, toLocation.networkUid()));
-        networkUid = toLocation.networkUid();
-        engine.enqueueTask(new CreateConnectionTask(fromLocation, toLocation));
+    public void connect(ModularNetworkHandler fromNetworkHandler, int fromOutputIndex, int toInputIndex) {
+        ModularNetworkSocket fromOutputSocket = fromNetworkHandler.outputs.get(fromOutputIndex);
+        ModularNetworkSocket toInputSocket = inputs.get(toInputIndex);
+        engine.enqueueTask(new ConnectNodesTask(fromOutputSocket.nodeUid, fromOutputSocket.nodeSocketIndex, toInputSocket.nodeUid, toInputSocket.nodeSocketIndex));
     }
 
-    protected void removeConnection(AudioOutputLocation fromLocation, AudioInputLocation toLocation) {
-        engine.enqueueTask(new RemoveConnectionTask(fromLocation, toLocation));
-    }
-
-    public void connectWith(ModularNetworkSocket fromOutput, String toInput) {
-        if (connections.containsKey(toInput)) return;
-        connections.put(toInput, fromOutput);
-        createConnection(fromOutput.networkHandler.outputs.get(fromOutput.id), inputs.get(toInput));
-    }
-
-    public void disconnectWith(ModularNetworkSocket fromOutput, String toInput) {
-        if (connections.containsKey(toInput)) return;
-        connections.put(toInput, fromOutput);
-        removeConnection(fromOutput.networkHandler.outputs.get(fromOutput.id), inputs.get(toInput));
+    @FunctionalInterface
+    public interface ModularNetworkGraphSupplier {
+        NodeGraph get(
+                AudioEngine engine,
+                ArrayList<ModularNetworkHandler.ModularNetworkSocket> inputs,
+                ArrayList<ModularNetworkHandler.ModularNetworkSocket> outputs,
+                HashMap<String, AtomicReference<Object>> references
+        );
     }
 }
