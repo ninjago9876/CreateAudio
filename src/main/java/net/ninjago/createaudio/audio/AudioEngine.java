@@ -2,6 +2,9 @@ package net.ninjago.createaudio.audio;
 
 import net.ninjago.createaudio.audio.processor.IAudioProcessor;
 import net.ninjago.createaudio.audio.processor.AudioProcessor;
+import net.ninjago.createaudio.audio.utility.ProcessorGraph;
+
+import java.util.function.UnaryOperator;
 
 public class AudioEngine {
     private final IAudioProcessor audioProcessor;
@@ -14,6 +17,10 @@ public class AudioEngine {
 
     public AudioEngine() {
         audioProcessor = new AudioProcessor();
+    }
+
+    public void submitTask(UnaryOperator<ProcessorGraph> task) {
+        audioProcessor.submitTask(task);
     }
 
     public void start() {

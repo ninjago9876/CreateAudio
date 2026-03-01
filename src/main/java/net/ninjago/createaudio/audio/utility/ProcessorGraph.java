@@ -9,29 +9,58 @@ import java.util.Map;
 public class ProcessorGraph {
     public record Connection(int sinkUid, int sourceUid) { }
 
-    private final Map<Integer, AudioSource> sources = new HashMap<>();
-    private final Map<Integer, AudioSink> sinks = new HashMap<>();
+    private final Map<Integer, AudioSource> sources;
+    private final Map<Integer, AudioSink> sinks;
 
-    private final Map<Integer, Connection> connections = new HashMap<>(); // SinkUID -> Connection
+    private final Map<Integer, Connection> connections; // SinkUID -> Connection
 
-    public void addSource(AudioSource source) {
-        sources.put(source.uid, source);
+    public ProcessorGraph() {
+        sources = new HashMap<>();
+        sinks = new HashMap<>();
+        connections = new HashMap<>();
     }
 
-    public void removeSource(int sourceUid) {
-        sources.remove(sourceUid);
+    public ProcessorGraph(ProcessorGraph otherGraph) {
+        sources = new HashMap<>(otherGraph.sources);
+        sinks = new HashMap<>(otherGraph.sinks);
+        connections = new HashMap<>(otherGraph.connections);
     }
 
-    public void addSink(AudioSink sink) {
-        sinks.put(sink.uid, sink);
+    public ProcessorGraph addSource(AudioSource source) {
+        ProcessorGraph graphClone = new ProcessorGraph(this);
+        graphClone.sources.put(source.uid, source);
+        return graphClone;
     }
 
-    public void removeSink(int sinkUid) {
-        sinks.remove(sinkUid);
+    public ProcessorGraph removeSource(int sourceUid) {
+        ProcessorGraph graphClone = new ProcessorGraph(this);
+        graphClone.sources.remove(sourceUid);
+        graphClone.connections.values()
+                .removeIf(c -> c.sourceUid() == sourceUid);
+        return graphClone;
     }
 
-    public void connect(int sourceUid, int sinkUid) {
-        connections.put(sinkUid, new Connection(sinkUid, sourceUid));
+    public ProcessorGraph addSink(AudioSink sink) {
+        ProcessorGraph graphClone = new ProcessorGraph(this);
+        graphClone.sinks.put(sink.uid, sink);
+        return graphClone;
+    }
+
+    public ProcessorGraph removeSink(int sinkUid) {
+        ProcessorGraph graphClone = new ProcessorGraph(this);
+        graphClone.sinks.remove(sinkUid);
+        graphClone.connections.remove(sinkUid);
+        return graphClone;
+    }
+
+    public ProcessorGraph connect(int sourceUid, int sinkUid) {
+        if (!sources.containsKey(sourceUid) || !sinks.containsKey(sinkUid)) {
+            return this; // or throw
+        }
+
+        ProcessorGraph graphClone = new ProcessorGraph(this);
+        graphClone.connections.put(sinkUid, new Connection(sinkUid, sourceUid));
+        return graphClone;
     }
 
     public void tick(long currentFrame) {
@@ -43,9 +72,10 @@ public class ProcessorGraph {
             source.pushBackBuffer();
         }
 
-        for (int sinkUid : connections.keySet()) {
-            AudioSink sink = sinks.get(sinkUid);
-            sink.tick(sources.get(connections.get(sinkUid).sourceUid).getFrontBuffer(), currentFrame);
+        for (Connection connection : connections.values()) {
+            AudioSink sink = sinks.get(connection.sinkUid());
+            AudioSource source = sources.get(connection.sourceUid());
+            sink.tick(source.getFrontBuffer(), currentFrame);
         }
     }
 }
