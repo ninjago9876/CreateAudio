@@ -10,8 +10,10 @@ public class AudioEngine {
     public static final int SAMPLING_RATE = 48_000;
     public static final long FRAME_DURATION_NS = (long) ((1000_000_000f / SAMPLING_RATE) * FRAME_SIZE);
 
+    private int uidCounter = 0;
+
     public AudioEngine() {
-        audioProcessor = new AudioProcessor(allocateUID());
+        audioProcessor = new AudioProcessor();
     }
 
     public void start() {
@@ -21,8 +23,6 @@ public class AudioEngine {
     public void shutdown() {
         audioProcessor.stop();
     }
-
-    private int uidCounter = 0;
 
     public int allocateUID() {
         uidCounter++;

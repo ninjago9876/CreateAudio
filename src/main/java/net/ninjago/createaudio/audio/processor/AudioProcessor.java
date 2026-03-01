@@ -2,12 +2,23 @@ package net.ninjago.createaudio.audio.processor;
 
 import net.ninjago.createaudio.CreateAudio;
 import net.ninjago.createaudio.audio.AudioEngine;
+import net.ninjago.createaudio.audio.utility.ProcessorGraph;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
 
 public class AudioProcessor implements Runnable, IAudioProcessor {
     private final Thread thread;
     private volatile boolean running = true;
 
-    public AudioProcessor(int graphUid) {
+    private final AtomicReference<ProcessorGraph> processingGraph = new AtomicReference<>(new ProcessorGraph());
+
+    private final ExecutorService taskWorker =
+            Executors.newSingleThreadExecutor();
+
+    public AudioProcessor() {
         thread = new Thread(this);
     }
 
@@ -19,6 +30,16 @@ public class AudioProcessor implements Runnable, IAudioProcessor {
     @Override
     public void stop() {
         running = false;
+        taskWorker.shutdown();
+    }
+
+    @Override
+    public void submitTask(UnaryOperator<ProcessorGraph> task) {
+        taskWorker.submit(() -> {
+            ProcessorGraph current = processingGraph.get();
+            ProcessorGraph updated = task.apply(current);
+            processingGraph.set(updated);
+        });
     }
 
     @Override
@@ -44,8 +65,12 @@ public class AudioProcessor implements Runnable, IAudioProcessor {
     }
 
     private void processAudioFrame(long currentFrame) {
+        ProcessorGraph currentGraph = processingGraph.get();
+
         if ((currentFrame % 100) == 0) { // every 1024 frames
             CreateAudio.LOGGER.info("Audio frame: {}", currentFrame);
         }
+
+        currentGraph.tick(currentFrame);
     }
 }
