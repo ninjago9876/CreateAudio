@@ -1,5 +1,7 @@
 package net.ninjago.createaudio.audio.utility;
 
+import net.ninjago.createaudio.audio.AudioEngine;
+
 public class AudioBuffer {
     private float[] frame;
 
@@ -12,20 +14,18 @@ public class AudioBuffer {
     }
 
     public short[] getPCM() {
-        if (frame == null) {
-            return new short[0];
+        if (this.frame == null) {
+            return new short[AudioEngine.FRAME_SIZE];
         }
 
-        short[] pcm = new short[frame.length];
+        short[] pcm = new short[this.frame.length];
 
-        for (int i = 0; i < frame.length; i++) {
-            float sample = frame[i];
+        for (int i = 0; i < this.frame.length; i++) {
+            // Clamp to [-1.0, 1.0] to avoid overflow
+            float sample = Math.max(-1.0f, Math.min(1.0f, this.frame[i]));
 
-            // Clamp just in case
-            if (sample > 1.0f) sample = 1.0f;
-            if (sample < -1.0f) sample = -1.0f;
-
-            pcm[i] = (short) (sample * 32767f);
+            // Convert to 16-bit signed PCM
+            pcm[i] = (short) (sample * Short.MAX_VALUE);
         }
 
         return pcm;
