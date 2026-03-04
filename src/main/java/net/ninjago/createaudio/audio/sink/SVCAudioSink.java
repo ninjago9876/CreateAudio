@@ -2,8 +2,6 @@ package net.ninjago.createaudio.audio.sink;
 
 import de.maxhenkel.voicechat.api.audiochannel.AudioChannel;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
-import net.ninjago.createaudio.CreateAudio;
-import net.ninjago.createaudio.audio.AudioEngine;
 import net.ninjago.createaudio.audio.utility.AudioBuffer;
 import net.ninjago.createaudio.voicechat.SimpleVoiceChatPlugin;
 
@@ -15,7 +13,8 @@ public class SVCAudioSink extends AudioSink {
 
     private volatile SVCHook hook;
 
-    private final int OPUS_FRAMES_PER_FRAME = Math.ceilDiv(AudioEngine.FRAME_SIZE, SimpleVoiceChatPlugin.OPUS_FRAME_SIZE);
+    private float[] buffer = new float[SimpleVoiceChatPlugin.OPUS_FRAME_SIZE * 4];
+    private int bufferSize = 0; // how many valid samples are in buffer
 
     public SVCAudioSink(int uid, CompletableFuture<SVCHook> hookFuture) {
         super(uid);
@@ -25,18 +24,40 @@ public class SVCAudioSink extends AudioSink {
     @Override
     public void tick(AudioBuffer input, long currentFrame) {
         SVCHook h = hook;
-        if (h == null) return;
-
-        short[] pcm = input.getPCM();
-
-        short[] window = new short[SimpleVoiceChatPlugin.OPUS_FRAME_SIZE];
-        for (int i = 0; i < OPUS_FRAMES_PER_FRAME; i++) {
-            int length = Math.min(SimpleVoiceChatPlugin.OPUS_FRAME_SIZE, pcm.length - i * SimpleVoiceChatPlugin.OPUS_FRAME_SIZE);
-            System.arraycopy(pcm, i * SimpleVoiceChatPlugin.OPUS_FRAME_SIZE, window, 0, length);
-            if (length < SimpleVoiceChatPlugin.OPUS_FRAME_SIZE) {
-                Arrays.fill(window, length, SimpleVoiceChatPlugin.OPUS_FRAME_SIZE, (short) 0);
-            }
-            hook.channel.send(hook.encoder.encode(window));
+        if (h == null) {
+            return;
         }
+
+        float[] samples = input.get();
+        ensureCapacity(bufferSize + samples.length);
+
+        // Append incoming samples
+        System.arraycopy(samples, 0, buffer, bufferSize, samples.length);
+        bufferSize += samples.length;
+
+        int frameSize = SimpleVoiceChatPlugin.OPUS_FRAME_SIZE;
+
+        // Process while enough samples are available
+        while (bufferSize >= frameSize) {
+            float[] svcFrame = new float[frameSize];
+
+            // Copy frame out
+            System.arraycopy(buffer, 0, svcFrame, 0, frameSize);
+
+            // Shift remaining samples left
+            System.arraycopy(buffer, frameSize, buffer, 0, bufferSize - frameSize);
+            bufferSize -= frameSize;
+
+            hook.channel.send(hook.encoder.encode(AudioBuffer.getPCM(svcFrame)));
+        }
+    }
+
+    private void ensureCapacity(int requiredCapacity) {
+        if (requiredCapacity <= buffer.length) {
+            return;
+        }
+
+        int newSize = Math.max(requiredCapacity, buffer.length * 2);
+        buffer = Arrays.copyOf(buffer, newSize);
     }
 }

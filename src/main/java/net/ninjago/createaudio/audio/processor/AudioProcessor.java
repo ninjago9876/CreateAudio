@@ -47,6 +47,7 @@ public class AudioProcessor implements Runnable, IAudioProcessor {
         long framePosition = 0;
         long startTime = System.nanoTime();
 
+        // Loop too fast...
         while (running) {
             framePosition++;
             processAudioFrame(framePosition);

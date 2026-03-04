@@ -14,15 +14,19 @@ public class AudioBuffer {
     }
 
     public short[] getPCM() {
-        if (this.frame == null) {
+        return AudioBuffer.getPCM(frame);
+    }
+
+    public static short[] getPCM(float[] frame) {
+        if (frame == null) {
             return new short[AudioEngine.FRAME_SIZE];
         }
 
-        short[] pcm = new short[this.frame.length];
+        short[] pcm = new short[frame.length];
 
-        for (int i = 0; i < this.frame.length; i++) {
+        for (int i = 0; i < frame.length; i++) {
             // Clamp to [-1.0, 1.0] to avoid overflow
-            float sample = Math.max(-1.0f, Math.min(1.0f, this.frame[i]));
+            float sample = Math.max(-1.0f, Math.min(1.0f, frame[i]));
 
             // Convert to 16-bit signed PCM
             pcm[i] = (short) (sample * Short.MAX_VALUE);
