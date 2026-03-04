@@ -11,11 +11,11 @@ public class SynthesizerAudioSource extends AudioSource {
     public void tick(long currentFrame) {
         float[] frame = new float[AudioEngine.FRAME_SIZE];
 
-        for (int i = 0; i < AudioEngine.FRAME_SIZE; i++) {
-            long sampleT = i + AudioEngine.FRAME_SIZE * currentFrame;
+        for (int t = 0; t < AudioEngine.FRAME_SIZE; t++) {
+            long sampleT = t + AudioEngine.FRAME_SIZE * currentFrame;
             float timeSeconds = (float)sampleT / AudioEngine.SAMPLING_RATE;
 
-            frame[i] = (float) Math.sin(timeSeconds * 2 * Math.PI * 10000);
+            frame[t] = (float) Math.sin(timeSeconds * 2 * Math.PI * 1000);
         }
 
         buffer.push(frame);
